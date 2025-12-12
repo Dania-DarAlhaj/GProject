@@ -9,7 +9,10 @@ export default function LoginPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // to send the email and password to the next page
+    if (email === "admin@gmail.com" && password === "admin") {
+    navigate("/AdminPage");
+    return; 
+  }
     navigate("/user", {
       state: {
         email: email,
@@ -45,7 +48,6 @@ export default function LoginPage() {
       >
         <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>Login</h2>
 
-        {/* email */}
         <input
           type="email"
           placeholder="Enter your email"

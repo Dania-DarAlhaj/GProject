@@ -890,7 +890,9 @@ export default function HomePage() {
   }, []);
 const navigate = useNavigate();
 
+
   const services = [
+
     { title: 'Wedding Venues', desc: 'Discover exquisite halls with premium amenities and breathtaking ambiance for your perfect celebration.', icon: '🏛️' },
     { title: 'Music & Entertainment', desc: 'World-class DJs and live orchestras to create unforgettable musical experiences.', icon: '🎧' },
     { title: 'Photography & Videography', desc: 'Award-winning photographers capturing every precious moment with artistic excellence.', icon: '📸' },
@@ -1280,7 +1282,7 @@ const navigate = useNavigate();
             <div className="col-lg-2 col-md-4 mb-4">
               <h5 className="footer-heading">Vendors</h5>
               <ul className="footer-links">
-                <li><a href="#">List Your Venue</a></li>
+                <li><a href="">List Your Venue</a></li>
                 <li><a href="#">Join as Vendor</a></li>
                 <li><a href="#">Vendor Resources</a></li>
               </ul>

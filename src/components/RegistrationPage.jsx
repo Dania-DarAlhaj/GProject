@@ -1,30 +1,56 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
 
 export default function RegistrationPage() {
-  const [role, setRole] = useState("user"); 
+  const [role, setRole] = useState("user");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
 
-  const handleContinue = (e) => {
+  const handleContinue = async (e) => {
     e.preventDefault();
-
-    sessionStorage.setItem("email", email);
-    sessionStorage.setItem("password", password);
-    sessionStorage.setItem("role", role);
-
-    if (role === "user") {
-      navigate("/user", {
-        state: { email, password }
-      });
-    } else if (role === "owner") {
-      navigate("/owner", {
-        state: { email, password }
-      });
-    }
+    setLoading(true);
+    setMessage("");
     
+    await supabase.auth.signOut();
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: "http://localhost:3000/VerifyPage",
+      },
+    });
+
+    if (error) {
+      setMessage(error.message);
+      setLoading(false);
+      return;
+    }
+
+    sessionStorage.setItem("pendingEmail", email);
+    sessionStorage.setItem("pendingPassword", password);
+    sessionStorage.setItem("pendingRole", role);
+    sessionStorage.setItem("linkSentTime", Date.now());
+
+  
+    sessionStorage.setItem("email", email); 
+    sessionStorage.setItem("password", password); 
+    sessionStorage.setItem("ownerType", "decoration");
+    sessionStorage.setItem("businessName", "My Decoration Co");
+    sessionStorage.setItem("phone", "0591234567");
+    sessionStorage.setItem("city", "Ramallah");
+
+   
+    navigate("/VerifyPage");
+
+    setMessage("Check your email for the verification link.");
+    setLoading(false);
   };
 
   return (
@@ -37,7 +63,7 @@ export default function RegistrationPage() {
       background: "#FAF8F5",
       fontFamily: "Lato, sans-serif"
     }}>
-      <form 
+      <form
         onSubmit={handleContinue}
         style={{
           background: "white",
@@ -52,52 +78,61 @@ export default function RegistrationPage() {
       >
         <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>Register</h2>
 
-        {/* email */}
-        <input 
-          type="email" 
+        <input
+          type="email"
           placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{ padding: "0.8rem", borderRadius: "5px", border: "1px solid #ccc", fontSize: "1rem" }}
+          style={{
+            padding: "0.8rem",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            fontSize: "1rem"
+          }}
         />
 
-        {/* password */}
-        <input 
-          type="password" 
+        <input
+          type="password"
           placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{ padding: "0.8rem", borderRadius: "5px", border: "1px solid #ccc", fontSize: "1rem" }}
+          style={{
+            padding: "0.8rem",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            fontSize: "1rem"
+          }}
         />
 
-        {/* role selection */}
         <div>
           <label>
-            <input 
-              type="radio" 
-              name="role" 
+            <input
+              type="radio"
+              name="role"
               value="user"
               checked={role === "user"}
               onChange={(e) => setRole(e.target.value)}
-            /> User
+            />{" "}
+            User
           </label>
           <br />
           <label>
-            <input 
-              type="radio" 
-              name="role" 
+            <input
+              type="radio"
+              name="role"
               value="owner"
               checked={role === "owner"}
               onChange={(e) => setRole(e.target.value)}
-            /> Owner for Business
+            />{" "}
+            Owner for Business
           </label>
         </div>
 
-        {/* continue button */}
         <button
           type="submit"
+          disabled={loading}
           style={{
             padding: "0.8rem",
             borderRadius: "5px",
@@ -105,12 +140,16 @@ export default function RegistrationPage() {
             background: "#C9A27C",
             color: "white",
             fontSize: "1rem",
-            cursor: "pointer",
+            cursor: loading ? "not-allowed" : "pointer",
             transition: "0.2s"
           }}
         >
-          Continue
+          {loading ? "Processing..." : "Continue"}
         </button>
+
+        {message && (
+          <p style={{ color: "green", textAlign: "center" }}>{message}</p>
+        )}
       </form>
     </div>
   );

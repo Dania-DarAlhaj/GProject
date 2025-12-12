@@ -4,9 +4,11 @@ import { supabase } from "../supabaseClient";
 export default function OwnerPage() {
   const navigate = useNavigate();
 
-  const email = sessionStorage.getItem("email");
-  const password = sessionStorage.getItem("password");
-  const role = sessionStorage.getItem("role");
+ 
+const email = sessionStorage.getItem("pendingEmail");
+const password = sessionStorage.getItem("pendingPassword");
+const role = sessionStorage.getItem("pendingRole");
+
 
   const [ownerType, setOwnerType] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -50,12 +52,12 @@ export default function OwnerPage() {
    
 
 
-    sessionStorage.setItem("ownerType", ownerType);
+    sessionStorage.setItem("pendingRole", ownerType);
   sessionStorage.setItem("businessName", businessName);
   sessionStorage.setItem("phone", phone);
   sessionStorage.setItem("city", city);
-  sessionStorage.setItem("email", email);
-  sessionStorage.setItem("password", password);
+  sessionStorage.setItem("pendingEmail", email);
+  sessionStorage.setItem("pendingPassword", password);
     // Cake 
   if (ownerType === "cake") {
   const userObj = {
@@ -65,7 +67,7 @@ export default function OwnerPage() {
     name: businessName,
     phone,
     city,
-    verified: false
+    verified: true
   };
 
   const { data: userData, error: userError } = await supabase
@@ -106,11 +108,14 @@ export default function OwnerPage() {
 
     // Navigation for other types
     if (ownerType === "DJ") {navigate("/dj-page");}
-    else if (ownerType === "hall") navigate("/hall-page");
-    else if (ownerType === "photography") navigate("/photography-page");
-    else if (ownerType === "decoration") {
+
+ else if (ownerType === "decoration") {
+
       navigate("/DecorationPage");
     }
+    else if (ownerType === "hall") navigate("/HallRegestration");
+    else if (ownerType === "photography") navigate("/photography-page");
+   
       
       
   };
@@ -127,10 +132,7 @@ export default function OwnerPage() {
     }}>
       <h2 style={{ textAlign: "center" }}>Owner Information</h2>
 
-      <p><strong>Email:</strong> {email}</p>
-      <p><strong>Password:</strong> {password}</p>
-      <p><strong>Role:</strong> {role}</p>
-
+     
       {/* business name */}
       <label style={{ marginTop: "1rem", display: "block" }}>
         <strong>Business Name:</strong>

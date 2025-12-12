@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { supabase } from "../supabaseClient"; // تأكدي المسار صح
+import { supabase } from "../supabaseClient"; 
 
 export default function UserPage() {
   const location = useLocation();

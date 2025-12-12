@@ -1,8 +1,11 @@
+// src/pages/DecorationPage.jsx
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 
 export default function DecorationPage() {
   const [selectedServices, setSelectedServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const services = [
     "Groom's Car Decoration",
@@ -16,108 +19,71 @@ export default function DecorationPage() {
     "Photo Booth Setup",
   ];
 
-  // جلب البيانات من sessionStorage
-  const email = sessionStorage.getItem("email");
-  const password = sessionStorage.getItem("password");
-  const ownerType = sessionStorage.getItem("ownerType");
+  const email = sessionStorage.getItem("pendingEmail");
+  const password = sessionStorage.getItem("pendingPassword");
+  const ownerType = sessionStorage.getItem("pendingRole");
   const businessName = sessionStorage.getItem("businessName");
   const phone = sessionStorage.getItem("phone");
   const city = sessionStorage.getItem("city");
-useEffect(() => {
-  console.table({
-    email: sessionStorage.getItem("email"),
-    ownerType: sessionStorage.getItem("ownerType"),
-    businessName: sessionStorage.getItem("businessName"),
-    phone: sessionStorage.getItem("phone"),
-    city: sessionStorage.getItem("city"),
-    userId: sessionStorage.getItem("user_id"),
-  });
-}, []);
 
+  useEffect(() => {
+    if (!email || !businessName || !ownerType || !phone || !city) {
+      setError("Some required information is missing. Please complete your registration first.");
+    }
+    setLoading(false);
+  }, [email, businessName, ownerType, phone, city]);
 
   const handleCheckboxChange = (service) => {
-    if (selectedServices.includes(service)) {
-      setSelectedServices(selectedServices.filter((s) => s !== service));
-    } else {
-      setSelectedServices([...selectedServices, service]);
-    }
+    setSelectedServices((prev) =>
+      prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const userObj = {
-      email,
-      password,
-      role: "decoration", 
-      name: businessName,
-      phone,
-      city,
-      verified: false,
-    };
-
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .insert([userObj])
-      .select();
-if (userError) {
-  console.error("Detailed error:", userError);
-  alert("Error saving user. Please check the console for details.");
-  return;
-}
-
-    const userId = userData[0].id;
-    sessionStorage.setItem("user_id", userId); 
-
-    const ownerData = {
-      user_id: userId,
-      owner_type: ownerType,
-      visible: false,
-    };
-
-    const { error: ownerError } = await supabase
-      .from("owners")
-      .insert([ownerData]);
-
-    if (ownerError) {
-      console.error("Error saving owner:", ownerError);
-      alert("Error saving owner. Please try again.");
+    if (!email || !businessName) {
+      alert("Required data missing. Cannot save services.");
       return;
     }
 
-    const insertData = services.map((service) => ({
-      user_id: userId,
-      service_name: service,
-      selected: selectedServices.includes(service),
-    }));
+    try {
+     
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .insert([{ email, password, role: "decoration", name: businessName, phone, city, verified: false }])
+        .select();
 
-    const { error: serviceError } = await supabase
-      .from("DecorationServices")
-      .insert(insertData);
+      if (userError) throw userError;
 
-    if (serviceError) {
-      console.error("Error saving services:", serviceError);
-      alert("Error saving services. Please try again.");
-    } else {
+      const userId = userData[0].id;
+      sessionStorage.setItem("user_id", userId);
+
+      const { error: ownerError } = await supabase.from("owners").insert([{ user_id: userId, owner_type: ownerType, visible: false }]);
+      if (ownerError) throw ownerError;
+
+     
+      const insertData = services.map((service) => ({
+        user_id: userId,
+        service_name: service,
+        selected: selectedServices.includes(service),
+      }));
+      const { error: serviceError } = await supabase.from("DecorationServices").insert(insertData);
+      if (serviceError) throw serviceError;
+
       alert("Services saved successfully!");
       setSelectedServices([]);
+    } catch (err) {
+      console.error("Error:", err);
+      alert("There was an error saving your data. Check the console for details.");
     }
   };
 
-  return (
-    <div
-      style={{
-        maxWidth: "500px",
-        margin: "2rem auto",
-        padding: "2rem",
-        background: "#fff",
-        borderRadius: "10px",
-        boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-        fontFamily: "Lato",
-      }}
-    >
-      <h2 style={{ textAlign: "center" }}>Decoration Services</h2>
+  if (loading) return <p style={{ textAlign: "center", marginTop: "2rem" }}>Loading...</p>;
+  if (error) return <p style={{ textAlign: "center", marginTop: "2rem", color: "red" }}>{error}</p>;
 
+  return (
+    <div style={{ maxWidth: "500px", margin: "2rem auto", padding: "2rem", background: "#fff", borderRadius: "10px", boxShadow: "0 4px 10px rgba(0,0,0,0.1)", fontFamily: "Lato" }}>
+      <h2 style={{ textAlign: "center" }}>Decoration Services</h2>
       <form onSubmit={handleSubmit}>
         {services.map((service) => (
           <div key={service} style={{ marginBottom: "0.5rem" }}>
@@ -134,20 +100,7 @@ if (userError) {
           </div>
         ))}
 
-        <button
-          type="submit"
-          style={{
-            marginTop: "1rem",
-            width: "100%",
-            padding: "0.8rem",
-            background: "#C9A27C",
-            border: "none",
-            borderRadius: "5px",
-            color: "white",
-            fontSize: "1rem",
-            cursor: "pointer",
-          }}
-        >
+        <button type="submit" style={{ marginTop: "1rem", width: "100%", padding: "0.8rem", background: "#C9A27C", border: "none", borderRadius: "5px", color: "white", fontSize: "1rem", cursor: "pointer" }}>
           Save Services
         </button>
       </form>
